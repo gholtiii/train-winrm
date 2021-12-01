@@ -99,7 +99,11 @@ module TrainPlugins
       end
 
       def uri
-        "winrm://#{options[:user]}@#{options[:endpoint]}:#{@rdp_port}"
+        if options[:user].nil?
+          "winrm://#{options[:endpoint]}:#{@rdp_port}"
+        else
+          "winrm://#{options[:user]}@#{options[:endpoint]}:#{@rdp_port}"
+        end
       end
 
       private

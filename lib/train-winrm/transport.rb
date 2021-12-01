@@ -46,12 +46,12 @@ module TrainPlugins
 
       # ref: https://github.com/winrb/winrm#transports
       SUPPORTED_WINRM_TRANSPORTS = %i{negotiate ssl plaintext kerberos}.freeze
-      SUPPORTED_WINRM_SHELL_TYPES = %i{powershell elevated cmd}.freeze
+      SUPPORTED_WINRM_SHELL_TYPES = %i{powershell cmd}.freeze
 
       # common target configuration
       option :host, required: true
       option :port
-      option :user, default: "administrator", required: true
+      option :user, default: "administrator"
       option :password, nil
       option :winrm_transport, default: :negotiate
       option :winrm_disable_sspi, default: false
@@ -61,6 +61,8 @@ module TrainPlugins
       option :self_signed, default: false
 
       # additional winrm options
+      option :client_cert, default: nil
+      option :client_key, default: nil
       option :rdp_port, default: 3389
       option :connection_retries, default: 5
       option :connection_retry_sleep, default: 1
@@ -128,15 +130,13 @@ module TrainPlugins
       # @return [Hash] hash of connection options
       # @api private
       def connection_options(opts)
-        {
+        final_opts = {
           logger: logger,
           transport: opts[:winrm_transport].to_sym,
           disable_sspi: opts[:winrm_disable_sspi],
           basic_auth_only: opts[:winrm_basic_auth_only],
           hostname: opts[:host],
           endpoint: opts[:endpoint],
-          user: opts[:user],
-          password: opts[:password],
           rdp_port: opts[:rdp_port],
           connection_retries: opts[:connection_retries],
           connection_retry_sleep: opts[:connection_retry_sleep],
@@ -148,6 +148,12 @@ module TrainPlugins
           ssl_peer_fingerprint: opts[:ssl_peer_fingerprint],
           winrm_shell_type: opts[:winrm_shell_type],
         }
+        final_opts[:client_cert] = opts[:client_cert] unless opts[:client_cert].nil?
+        final_opts[:client_key] = opts[:client_key] unless opts[:client_key].nil?
+        final_opts[:transport] = :ssl unless opts[:client_cert].nil? && opts[:client_key].nil?
+        final_opts[:user] = opts[:user] || "administrator" if opts[:client_cert].nil? || opts[:client_key].nil?
+        final_opts[:password] = opts[:password] if opts[:client_cert].nil? || opts[:client_key].nil?
+        final_opts
       end
 
       # Creates a new WinRM Connection instance and save it for potential

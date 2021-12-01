@@ -47,6 +47,14 @@ describe "winrm transport" do
       _(winrm.options[:self_signed]).must_equal false
     end
 
+    it "has default client_cert set" do
+      _(winrm.options[:client_cert]).must_be_nil
+    end
+
+    it "has default client key set" do
+      _(winrm.options[:client_key]).must_be_nil
+    end
+
     it "has default rdp_port set" do
       _(winrm.options[:rdp_port]).must_equal 3389
     end
@@ -76,10 +84,18 @@ describe "winrm transport" do
       _(connection.uri).must_equal "winrm://administrator@http://dummy_host:5985/wsman:3389"
     end
 
-    it "without ssl generates uri" do
+    it "with ssl generates uri" do
       conf[:ssl] = true
       conf[:host] = "dummy_host_ssl"
       _(connection.uri).must_equal "winrm://administrator@https://dummy_host_ssl:5986/wsman:3389"
+    end
+
+    it "with ssl and certs generates uri" do
+      conf[:ssl] = true
+      conf[:host] = "dummy_host_ssl"
+      conf[:client_cert] = "/tmp/whatever"
+      conf[:client_key] = "/tmp/whatever.pem"
+      _(connection.uri).must_equal "winrm://https://dummy_host_ssl:5986/wsman:3389"
     end
   end
 

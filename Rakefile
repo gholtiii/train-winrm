@@ -18,8 +18,6 @@ task test: "test:unit"
 namespace :test do
   {
     unit: "test/unit/*_test.rb",
-    integration: "test/integration/*_test.rb",
-    functional: "test/functional/*_test.rb",
   }.each do |task_name, glob|
     Rake::TestTask.new(task_name) do |t|
       t.libs.push "lib"
@@ -41,13 +39,12 @@ namespace :test do
     env = ""
     env += "TRAIN_WINRM_TARGET=winrm://vagrant@127.0.0.1 "
     env += "TRAIN_WINRM_PASSWORD=vagrant "
+    env += "TRAIN_WINRM_SSL=true "
+    env += "TRAIN_WINRM_SHELL_TYPE=powershell "
 
-    %w{powershell elevated}.each do |shell_type|
-      env += "TRAIN_WINRM_SHELL_TYPE=#{shell_type} "
-      Dir.glob("test/integration/*_test.rb").all? do |file|
-        sh "#{env} #{Gem.ruby} -I ./test/integration #{file}"
-      end || raise("Failures")
-    end
+    Dir.glob("test/integration/*_test.rb").all? do |file|
+      sh "#{env} #{Gem.ruby} -I ./test/integration #{file}"
+    end || raise("Failures")
   end
 
   task :stop_vagrant do |_t|
